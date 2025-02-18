@@ -379,7 +379,7 @@ def adicionar_calculos_automaticos(df, excel_path):
             continue
 
         # Montar expressão de cálculo
-        calculo = ' + '.join([f'${{{var}}}' for var in vars_somar])
+        calculo = '+'.join([f'${{{var}}}' for var in vars_somar])
 
         # Atualizar o cálculo na variável alvo
         df.loc[df['name'] == target_var, 'calculation'] = calculo
