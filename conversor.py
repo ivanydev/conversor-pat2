@@ -327,8 +327,69 @@ def add_groups(survey_df, groups_df):
             survey_df = survey_df.sort_index().reset_index(drop=True)
     
     return survey_df
+#=========================================================================
 
-def convert_to_xlsform(data_file, groups_file):
+# Função para adicionar cálculos automáticos baseados em padrões de um Excel
+def adicionar_calculos_automaticos(df, excel_path):
+    """
+    Adiciona cálculos automáticos baseados em padrões de um Excel
+    
+    Parâmetros:
+        df (pd.DataFrame): DataFrame principal do formulário
+        excel_path (str): Caminho para o Excel com os padrões
+    
+    Retorna:
+        pd.DataFrame: DataFrame com os cálculos adicionados
+    """
+    # Ler o arquivo de padrões
+    try:
+        padroes_df = pd.read_excel(excel_path)
+    except Exception as e:
+        st.error(f"Erro ao ler arquivo de padrões: {str(e)}")
+        return df
+
+    # Verificar colunas necessárias
+    if not all(col in padroes_df.columns for col in ['name', 'pergunta', 'padrao']):
+        st.error("Arquivo de padrões deve conter as colunas: name, pergunta, padrao")
+        return df
+
+    for _, row in padroes_df.iterrows():
+        target_var = row['name']
+        pergunta = str(row['pergunta'])
+        padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
+
+        # Verificar se a variável alvo existe
+        if target_var not in df['name'].values:
+            st.warning(f"Variável alvo '{target_var}' não encontrada no formulário")
+            continue
+
+        # Filtrar variáveis da mesma pergunta
+        pergunta_filter = df['name'].str.contains(f'_{pergunta}_', case=False, na=False)
+        vars_pergunta = df[pergunta_filter]['name'].tolist()
+
+        # Filtrar variáveis que correspondem aos padrões
+        vars_somar = []
+        for var in vars_pergunta:
+            var_clean = var.lower()
+            if any(padrao in var_clean for padrao in padroes):
+                vars_somar.append(var)
+
+        if not vars_somar:
+            st.warning(f"Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)}")
+            continue
+
+        # Montar expressão de cálculo
+        calculo = ' + '.join([f'${{{var}}}' for var in vars_somar])
+
+        # Atualizar o cálculo na variável alvo
+        df.loc[df['name'] == target_var, 'calculation'] = calculo
+        df.loc[df['name'] == target_var, 'type'] = 'calculate'
+
+    return df
+
+
+# Função para converter os dados do Excel para XLSForm
+def convert_to_xlsform(data_file, groups_file, padroes_file):
     # Processar dados principais
     xls = pd.ExcelFile(data_file)
     all_surveys = []
@@ -361,6 +422,10 @@ def convert_to_xlsform(data_file, groups_file):
     
     survey = add_groups(survey, groups_df)
     survey=remover_grupos_vazios(survey)
+    survey = adicionar_calculos_automaticos(survey, padroes_file)
+    
+    
+    
     # Adicionar linhas padrão
     standard_rows = [
     ["start", "start", "", "", "", "", "", "", "", "", ""],
@@ -398,9 +463,10 @@ os.system("cls")
 st.title("Conversor de Excel para XLSForm")
 data_file = st.file_uploader("Arquivo principal com os dados", type=["xlsx"])
 groups_file = st.file_uploader("Arquivo com a definição dos grupos", type=["xlsx"])
+padroes_file = st.file_uploader("Arquivo com a definição dos somatorios", type=["xlsx"])
 
-if data_file and groups_file:
-    converted = convert_to_xlsform(data_file, groups_file)
+if data_file and groups_file and padroes_file:
+    converted = convert_to_xlsform(data_file, groups_file, padroes_file)
     if converted:
         st.download_button(
             label="Baixar XLSForm",
