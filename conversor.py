@@ -392,7 +392,7 @@ def adicionar_calculos_automaticosX(df, excel_path):
 
 
 
-def adicionar_calculos_automaticos(df, excel_path):
+def adicionar_calculos_automaticosXXXXX(df, excel_path):
     """
     Adiciona cálculos automáticos baseados em padrões de um Excel
     
@@ -475,11 +475,93 @@ def adicionar_calculos_automaticos(df, excel_path):
 
     return df
 
+ 
 
+def adicionar_calculos_automaticos(df, excel_path):
+    """
+    Adiciona cálculos automáticos baseados em padrões de um Excel, evitando ciclos.
 
+    Parâmetros:
+        df (pd.DataFrame): DataFrame principal do formulário
+        excel_path (str): Caminho para o Excel com os padrões
 
+    Retorna:
+        pd.DataFrame: DataFrame atualizado com os cálculos adicionados.
+    """
+    try:
+        padroes_df = pd.read_excel(excel_path)
+    except Exception as e:
+        print(f"Erro ao ler arquivo de padrões: {str(e)}")
+        return df
 
+    if not all(col in padroes_df.columns for col in ['name', 'pergunta', 'padrao', 'excepto']):
+        print("Arquivo de padrões deve conter as colunas: name, pergunta, padrao, excepto")
+        return df
 
+    existing_calculations = df.set_index('name')['calculation'].dropna().to_dict()
+
+    def has_cycle(var, visited):
+        """ Verifica se há um ciclo nos cálculos antes de adicionar. """
+        if var in visited:
+            print(f"⚠️ Ciclo detectado: {var}")
+            return True  # Ciclo detectado
+        if var not in existing_calculations:
+            return False  # Variável não tem cálculo ainda
+
+        visited.add(var)
+        for ref_var in existing_calculations[var].split('+'):
+            ref_var = ref_var.strip('${}')
+            if has_cycle(ref_var, visited):
+                return True
+        visited.remove(var)
+        return False
+
+    for _, row in padroes_df.iterrows():
+        target_var = row['name']
+        pergunta = str(row['pergunta'])
+        padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
+        excepto = [e.strip().lower() for e in str(row['excepto']).split(',') if e.strip()]
+        st.write(f"Variável alvo: {target_var}")
+        st.write(f"Padroes: {padroes}")
+        st.write(f"Excepto: {excepto}")
+        st.write(f"Pergunta: {pergunta}")
+        st.write(f"=============================================================")
+
+        if target_var not in df['name'].values:
+            print(f"⚠️ Variável alvo '{target_var}' não encontrada no formulário.")
+            continue
+
+        # Filtrar variáveis da mesma pergunta
+        pergunta_filter = df['name'].str.contains(f'_{pergunta}_', case=False, na=False)
+        vars_pergunta = df[pergunta_filter]['name'].tolist()
+
+        # Filtrar variáveis que devem ser somadas, excluindo as do "excepto"
+        vars_somar = []
+        for var in vars_pergunta:
+            var_clean = var.lower()
+            if var_clean == target_var.lower():
+                continue
+            st.write(f"Variável: {var_clean}")
+            st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
+            st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
+            if any(padrao in var_clean for padrao in padroes) and not any(exc in var_clean for exc in excepto):
+                vars_somar.append(var)
+
+        if not vars_somar:
+            print(f"⚠️ Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)} (exceto: {', '.join(excepto)})")
+            continue
+
+        new_calculation = '+'.join([f'${{{var}}}' for var in vars_somar])
+
+        if has_cycle(target_var, set()):
+            print(f"❌ Cálculo ignorado para {target_var} para evitar ciclo.")
+            continue
+
+        # Atualizar o cálculo na variável alvo
+        df.loc[df['name'] == target_var, 'calculation'] = new_calculation
+        df.loc[df['name'] == target_var, 'type'] = 'calculate'
+
+    return df
 
 # Função para converter os dados do Excel para XLSForm
 def convert_to_xlsform(data_file, groups_file, padroes_file):
