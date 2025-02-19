@@ -541,9 +541,9 @@ def adicionar_calculos_automaticos(df, excel_path):
             var_clean = var.lower()
             if var_clean == target_var.lower():
                 continue
-            st.write(f"Variável: {var_clean}")
-            st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
-            st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
+            #st.write(f"Variável: {var_clean}")
+            #st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
+            #st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
             if any(padrao in var_clean for padrao in padroes) and not any(exc in var_clean for exc in excepto):
                 vars_somar.append(var)
 
@@ -560,7 +560,8 @@ def adicionar_calculos_automaticos(df, excel_path):
         # Atualizar o cálculo na variável alvo
         df.loc[df['name'] == target_var, 'calculation'] = new_calculation
         df.loc[df['name'] == target_var, 'type'] = 'calculate'
-
+    st.write("Cálculos automáticos adicionados com sucesso.")
+    st.write("==💘 TE AMO MORZINHA MINHA XUXÚ MÃE DA ODVÂNYA 💘==")
     return df
 
 # Função para converter os dados do Excel para XLSForm
