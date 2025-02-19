@@ -521,11 +521,11 @@ def adicionar_calculos_automaticos(df, excel_path):
         pergunta = str(row['pergunta'])
         padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
         excepto = [e.strip().lower() for e in str(row['excepto']).split(',') if e.strip()]
-        st.write(f"Variável alvo: {target_var}")
-        st.write(f"Padroes: {padroes}")
-        st.write(f"Excepto: {excepto}")
-        st.write(f"Pergunta: {pergunta}")
-        st.write(f"=============================================================")
+        #st.write(f"Variável alvo: {target_var}")
+        #st.write(f"Padroes: {padroes}")
+        #st.write(f"Excepto: {excepto}")
+        #st.write(f"Pergunta: {pergunta}")
+        #st.write(f"=============================================================")
 
         if target_var not in df['name'].values:
             print(f"⚠️ Variável alvo '{target_var}' não encontrada no formulário.")
