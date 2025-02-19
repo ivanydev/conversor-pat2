@@ -330,7 +330,7 @@ def add_groups(survey_df, groups_df):
 #=========================================================================
 
 # Função para adicionar cálculos automáticos baseados em padrões de um Excel
-def adicionar_calculos_automaticos(df, excel_path):
+def adicionar_calculos_automaticosX(df, excel_path):
     """
     Adiciona cálculos automáticos baseados em padrões de um Excel
     
@@ -388,6 +388,97 @@ def adicionar_calculos_automaticos(df, excel_path):
         df.loc[df['name'] == target_var, 'type'] = 'calculate'
 
     return df
+
+
+
+
+def adicionar_calculos_automaticos(df, excel_path):
+    """
+    Adiciona cálculos automáticos baseados em padrões de um Excel
+    
+    Parâmetros:
+        df (pd.DataFrame): DataFrame principal do formulário
+        excel_path (str): Caminho para o Excel com os padrões
+    
+    Retorna:
+        pd.DataFrame: DataFrame com os cálculos adicionados
+    """
+    # Ler o arquivo de padrões
+    try:
+        padroes_df = pd.read_excel(excel_path)
+    except Exception as e:
+        st.error(f"Erro ao ler arquivo de padrões: {str(e)}")
+        return df
+
+    # Verificar colunas necessárias
+    if not all(col in padroes_df.columns for col in ['name', 'pergunta', 'padrao']):
+        st.error("Arquivo de padrões deve conter as colunas: name, pergunta, padrao")
+        return df
+
+    # Dicionário para rastrear dependências
+    dependencias = {}
+
+    # Passo 1: Identificar todas as dependências
+    for _, row in padroes_df.iterrows():
+        target_var = row['name']
+        pergunta = str(row['pergunta'])
+        padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
+
+        # Verificar se a variável alvo existe
+        if target_var not in df['name'].values:
+            st.warning(f"Variável alvo '{target_var}' não encontrada no formulário")
+            continue
+
+        # Filtrar variáveis da mesma pergunta
+        pergunta_filter = df['name'].str.contains(f'_{pergunta}_', case=False, na=False)
+        vars_pergunta = df[pergunta_filter]['name'].tolist()
+
+        # Filtrar variáveis que correspondem aos padrões
+        vars_somar = []
+        for var in vars_pergunta:
+            var_clean = var.lower()
+            if var_clean == target_var.lower():
+                continue  # Evitar auto-dependência
+            if any(padrao in var_clean for padrao in padroes):
+                vars_somar.append(var)
+
+        if not vars_somar:
+            st.warning(f"Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)}")
+            continue
+
+        # Registrar dependências
+        dependencias[target_var] = vars_somar
+
+    # Passo 2: Verificar ciclos nas dependências
+    def verificar_ciclo(var, visitados):
+        if var in visitados:
+            return True
+        visitados.add(var)
+        for dependente in dependencias.get(var, []):
+            if verificar_ciclo(dependente, visitados.copy()):
+                return True
+        return False
+
+    for var in dependencias:
+        if verificar_ciclo(var, set()):
+            st.error(f"Ciclo detectado nas dependências envolvendo a variável: {var}")
+            return df
+
+    # Passo 3: Adicionar cálculos de forma segura
+    for target_var, vars_somar in dependencias.items():
+        # Montar expressão de cálculo
+        calculo = '+'.join([f'${{{var}}}' for var in vars_somar])
+
+        # Atualizar o cálculo na variável alvo
+        df.loc[df['name'] == target_var, 'calculation'] = calculo
+        df.loc[df['name'] == target_var, 'type'] = 'calculate'
+
+    return df
+
+
+
+
+
 
 
 # Função para converter os dados do Excel para XLSForm
