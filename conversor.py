@@ -43,7 +43,11 @@ def remover_grupos_vazios(df):
     
     return df_limpo
  
- 
+
+
+
+
+
 def remove_line_breaks(df):
     if 'name' in df.columns:
         df['name'] = df['name'].astype(str).str.replace(r'[\n\r]', '', regex=True)
@@ -329,154 +333,48 @@ def add_groups(survey_df, groups_df):
     return survey_df
 #=========================================================================
 
+def gerar_campos_automaticos(df, variaveis):
+    """
+    Modifica as variáveis existentes para calculate e cria notes correspondentes
+    """
+    df = df.copy()
+    
+    # Processar em ordem reversa para manter a posição correta
+    for var in reversed(variaveis):
+        if var not in df['name'].values:
+            st.warning(f"Variável {var} não encontrada. Pulando...")
+            continue
+            
+        idx = df.index[df['name'] == var].tolist()[0]
+        
+        # Modificar a linha existente (calculate)
+        df.at[idx, 'type'] = 'calculate'
+        df.at[idx, 'constraint'] = f"regex(., '^[0-9]{{1,{10 if 'questionario' in var else 11}}}$')"
+        df.at[idx, 'calculation'] = 'substr(uuid(), 0, 8)'
+        df.at[idx, 'constraint_message'] = f'Deve conter somente dígitos e ter no máximo {10 if "questionario" in var else 11} caracteres.'
+        
+        # Criar note row
+        note_row = {
+            'type': 'note',
+            'name': f'show_{var.split("_")[-1]}',
+            'label::Portugues (pt)': f'ID Único: ${{{var}}}',
+            'hint::Portugues (pt)': '',
+            'required': 'false',
+            'appearance': '',
+            'constraint': '',
+            'calculation': '',
+            'constraint_message': '',
+            'relevant': '',
+            'choice_filter': ''
+        }
+        
+        # Inserir note row abaixo da variável modificada
+        df.loc[idx + 0.5] = note_row
+    
+    # Reordenar e resetar índices
+    return df.sort_index().reset_index(drop=True)
+#================================================================================
 # Função para adicionar cálculos automáticos baseados em padrões de um Excel
-def adicionar_calculos_automaticosX(df, excel_path):
-    """
-    Adiciona cálculos automáticos baseados em padrões de um Excel
-    
-    Parâmetros:
-        df (pd.DataFrame): DataFrame principal do formulário
-        excel_path (str): Caminho para o Excel com os padrões
-    
-    Retorna:
-        pd.DataFrame: DataFrame com os cálculos adicionados
-    """
-    # Ler o arquivo de padrões
-    try:
-        padroes_df = pd.read_excel(excel_path)
-    except Exception as e:
-        st.error(f"Erro ao ler arquivo de padrões: {str(e)}")
-        return df
-
-    # Verificar colunas necessárias
-    if not all(col in padroes_df.columns for col in ['name', 'pergunta', 'padrao']):
-        st.error("Arquivo de padrões deve conter as colunas: name, pergunta, padrao")
-        return df
-
-    for _, row in padroes_df.iterrows():
-        target_var = row['name']
-        pergunta = str(row['pergunta'])
-        padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
-
-        # Verificar se a variável alvo existe
-        if target_var not in df['name'].values:
-            st.warning(f"Variável alvo '{target_var}' não encontrada no formulário")
-            continue
-
-        # Filtrar variáveis da mesma pergunta
-        pergunta_filter = df['name'].str.contains(f'_{pergunta}_', case=False, na=False)
-        vars_pergunta = df[pergunta_filter]['name'].tolist()
-
-        # Filtrar variáveis que correspondem aos padrões
-        vars_somar = []
-        for var in vars_pergunta:
-            var_clean = var.lower()
-            if var_clean == target_var.lower():
-                continue
-            if any(padrao in var_clean for padrao in padroes):
-                vars_somar.append(var)
-
-        if not vars_somar:
-            st.warning(f"Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)}")
-            continue
-
-        # Montar expressão de cálculo
-        calculo = '+'.join([f'${{{var}}}' for var in vars_somar])
-
-        # Atualizar o cálculo na variável alvo
-        df.loc[df['name'] == target_var, 'calculation'] = calculo
-        df.loc[df['name'] == target_var, 'type'] = 'calculate'
-
-    return df
-
-
-
-
-def adicionar_calculos_automaticosXXXXX(df, excel_path):
-    """
-    Adiciona cálculos automáticos baseados em padrões de um Excel
-    
-    Parâmetros:
-        df (pd.DataFrame): DataFrame principal do formulário
-        excel_path (str): Caminho para o Excel com os padrões
-    
-    Retorna:
-        pd.DataFrame: DataFrame com os cálculos adicionados
-    """
-    # Ler o arquivo de padrões
-    try:
-        padroes_df = pd.read_excel(excel_path)
-    except Exception as e:
-        st.error(f"Erro ao ler arquivo de padrões: {str(e)}")
-        return df
-
-    # Verificar colunas necessárias
-    if not all(col in padroes_df.columns for col in ['name', 'pergunta', 'padrao']):
-        st.error("Arquivo de padrões deve conter as colunas: name, pergunta, padrao")
-        return df
-
-    # Dicionário para rastrear dependências
-    dependencias = {}
-
-    # Passo 1: Identificar todas as dependências
-    for _, row in padroes_df.iterrows():
-        target_var = row['name']
-        pergunta = str(row['pergunta'])
-        padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
-
-        # Verificar se a variável alvo existe
-        if target_var not in df['name'].values:
-            st.warning(f"Variável alvo '{target_var}' não encontrada no formulário")
-            continue
-
-        # Filtrar variáveis da mesma pergunta
-        pergunta_filter = df['name'].str.contains(f'_{pergunta}_', case=False, na=False)
-        vars_pergunta = df[pergunta_filter]['name'].tolist()
-
-        # Filtrar variáveis que correspondem aos padrões
-        vars_somar = []
-        for var in vars_pergunta:
-            var_clean = var.lower()
-            if var_clean == target_var.lower():
-                continue  # Evitar auto-dependência
-            if any(padrao in var_clean for padrao in padroes):
-                vars_somar.append(var)
-
-        if not vars_somar:
-            st.warning(f"Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)}")
-            continue
-
-        # Registrar dependências
-        dependencias[target_var] = vars_somar
-
-    # Passo 2: Verificar ciclos nas dependências
-    def verificar_ciclo(var, visitados):
-        if var in visitados:
-            return True
-        visitados.add(var)
-        for dependente in dependencias.get(var, []):
-            if verificar_ciclo(dependente, visitados.copy()):
-                return True
-        return False
-
-    for var in dependencias:
-        if verificar_ciclo(var, set()):
-            st.error(f"Ciclo detectado nas dependências envolvendo a variável: {var}")
-            return df
-
-    # Passo 3: Adicionar cálculos de forma segura
-    for target_var, vars_somar in dependencias.items():
-        # Montar expressão de cálculo
-        calculo = '+'.join([f'${{{var}}}' for var in vars_somar])
-
-        # Atualizar o cálculo na variável alvo
-        df.loc[df['name'] == target_var, 'calculation'] = calculo
-        df.loc[df['name'] == target_var, 'type'] = 'calculate'
-
-    return df
-
- 
-
 def adicionar_calculos_automaticos(df, excel_path):
     """
     Adiciona cálculos automáticos baseados em padrões de um Excel, evitando ciclos.
@@ -548,7 +446,7 @@ def adicionar_calculos_automaticos(df, excel_path):
                 vars_somar.append(var)
 
         if not vars_somar:
-            print(f"⚠️ Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)} (exceto: {', '.join(excepto)})")
+            #print(f"⚠️ Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)} (exceto: {', '.join(excepto)})")
             continue
 
         new_calculation = '+'.join([f'${{{var}}}' for var in vars_somar])
@@ -599,6 +497,8 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey = add_groups(survey, groups_df)
     survey=remover_grupos_vazios(survey)
     survey = adicionar_calculos_automaticos(survey, padroes_file)
+    # Lista de variáveis para automação
+    survey = gerar_campos_automaticos(survey, ['QEPE_DGE_SQE_B0_P0_id_questionario', 'QEPE_DGE_SQE_B0_P1_codigo_escola'])
     
     
     
