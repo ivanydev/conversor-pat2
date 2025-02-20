@@ -332,38 +332,44 @@ def add_groups(survey_df, groups_df):
     
     return survey_df
 #=========================================================================
-
-def gerar_campos_automaticos(df, variaveis):
+def gerar_campos_automaticosXXXX(df, variaveis):
     """
     Modifica as variáveis existentes para calculate e cria notes correspondentes
     """
     df = df.copy()
     
-    # Processar em ordem reversa para manter a posição correta
-    """ for var in reversed(variaveis):
-        if var not in df['name'].values:
-            st.warning(f"Variável {var} não encontrada. Pulando...")
-            continue """
     for var in reversed(variaveis):
         # Verifica se existe uma variável que termina com 'var'
         if not df['name'].str.endswith(var).any():
             st.warning(f"Variável terminando com '{var}' não encontrada. Pulando...")
             continue
     
+        info = ""
+        if 'questionario' in var:
+            info = "ID do questionário"
+        elif 'codigo_escola' in var:
+            info = "Código da escola"
+        elif 'fim_ano_lectivo' in var:
+            info = "Data de fim do ano letivo"
             
-        idx = df.index[df['name'] == var].tolist()[0]
+        idx = df.index[df['name'].str.endswith(var)].tolist()[0]
         
         # Modificar a linha existente (calculate)
         df.at[idx, 'type'] = 'calculate'
-        df.at[idx, 'constraint'] = f"regex(., '^[0-9]{{1,{10 if 'questionario' in var else 11}}}$')"
-        df.at[idx, 'calculation'] = 'substr(uuid(), 0, 8)'
-        df.at[idx, 'constraint_message'] = f'Deve conter somente dígitos e ter no máximo {10 if "questionario" in var else 11} caracteres.'
+        if 'fim_ano_lectivo' in var:
+            df.at[idx, 'calculation'] = '${inicio_ano_lectivo} + 1'
+        else:
+            df.at[idx, 'calculation'] = 'substr(uuid(), 0, 8)'
+            df.at[idx, 'constraint'] = f"regex(., '^[0-9]{{1,{10 if 'questionario' in var else 11}}}$')"
+            df.at[idx, 'constraint_message'] = f'Deve conter somente dígitos e ter no máximo {10 if "questionario" in var else 11} caracteres.'
+        
+        df.at[idx, 'label::Portugues (pt)'] = f'{info}: ${{{var}}}'
         
         # Criar note row
         note_row = {
             'type': 'note',
             'name': f'show_{var.split("_")[-1]}',
-            'label::Portugues (pt)': f'ID Único: ${{{var}}}',
+            'label::Portugues (pt)': f'ID : ${{{var}}}',
             'hint::Portugues (pt)': '',
             'required': 'false',
             'appearance': '',
@@ -379,7 +385,97 @@ def gerar_campos_automaticos(df, variaveis):
     
     # Reordenar e resetar índices
     return df.sort_index().reset_index(drop=True)
-#================================================================================
+
+#=========================================================================
+# 📌 Dicionário de regras sem os prefixos (mapeia somente o sufixo real da variável)
+
+# 📌 Dicionário de regras sem os prefixos
+REGRAS = {
+    "DGE_SQE_B0_P0_id_questionario": {
+        "constraint": "regex(., '^[0-9]{1,10}$')",
+        "constraint_msg": "Deve conter somente dígitos e ter no máximo 10 caracteres.",
+        "calculation": "substr(uuid(), 0, 8)",
+        "label_varavel": "ID do questionário"
+    },
+    "DGE_SQE_B0_P1_codigo_escola": {
+        "constraint": "regex(., '^[0-9]{1,11}$')",
+        "constraint_msg": "Deve conter somente dígitos e ter no máximo 11 caracteres.",
+        "calculation": "substr(uuid(), 0, 8)",
+        "label_varavel": "Código da escola"
+    },
+    "DGE_SQE_B0_P3_fim_ano_lectivo": {
+        "calculation": lambda var_name: f"${{{var_name.replace('fim', 'inicio')}}} + 1",
+        "constraint": "",
+        "constraint_msg": "",
+        "label_varavel": "fim do ano letivo"
+    }
+}
+
+def gerar_campos_automaticos(df, variaveis):
+    """
+    Modifica variáveis existentes para 'calculate' e cria 'notes' correspondentes.
+    Agora funciona para qualquer variável automática sem depender dos prefixos do questionário.
+    """
+    df = df.copy()
+
+    # 🔹 Remove valores NaN na coluna "name"
+    df = df.dropna(subset=["name"])
+
+    for var_sufixo in reversed(variaveis):
+        # 🔍 Encontra qualquer variável que termine exatamente com o nome esperado
+        match_indices = df.index[df['name'].str.endswith(var_sufixo, na=False)].tolist()
+
+        if not match_indices:
+            st.warning(f"Variável terminando com '{var_sufixo}' não encontrada. Pulando...")
+            continue
+
+        # Pega o primeiro índice correspondente
+        idx = match_indices[0]
+        var_name = df.at[idx, 'name']
+
+        # Aplica regras, se existirem
+        if var_sufixo in REGRAS:
+            regra = REGRAS[var_sufixo]
+            calculation = regra["calculation"] if isinstance(regra["calculation"], str) else regra["calculation"](var_name)
+            constraint = regra["constraint"]
+            constraint_msg = regra["constraint_msg"]
+            label_varavel=regra["label_varavel"]
+        else:
+            st.warning(f"Regras para '{var_sufixo}' não encontradas. Pulando...")
+            continue
+
+        # Modifica a linha existente (calculate)
+        df.at[idx, 'type'] = 'calculate'
+        df.at[idx, 'calculation'] = calculation
+        df.at[idx, 'constraint'] = constraint
+        df.at[idx, 'constraint_message'] = constraint_msg
+        df.at[idx, 'label::Portugues (pt)'] = f'Valor gerado automaticamente para {var_sufixo.replace("_", " ")}'
+
+        # Criar uma linha "note" dinâmica abaixo
+        note_row = {
+            'type': 'note',
+            'name': f'show_{var_sufixo.split("_")[-1]}',
+            'label::Portugues (pt)': f'{label_varavel} : ${{{var_name}}}',
+            'hint::Portugues (pt)': '',
+            'required': 'false',
+            'appearance': '',
+            'constraint': '',
+            'calculation': '',
+            'constraint_message': '',
+            'relevant': '',
+            'choice_filter': ''
+        }
+
+        # Inserir a linha note logo abaixo
+        df.loc[idx + 0.5] = note_row
+
+    # Reordenar e resetar índices
+    return df.sort_index().reset_index(drop=True)
+
+
+
+#=========================================================================
+ 
 # Função para adicionar cálculos automáticos baseados em padrões de um Excel
 def adicionar_calculos_automaticos(df, excel_path):
     """
@@ -504,7 +600,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey=remover_grupos_vazios(survey)
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
-    survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola'])
+    survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P3_fim_ano_lectivo'])
     
     
     
