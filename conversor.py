@@ -340,10 +340,16 @@ def gerar_campos_automaticos(df, variaveis):
     df = df.copy()
     
     # Processar em ordem reversa para manter a posição correta
-    for var in reversed(variaveis):
+    """ for var in reversed(variaveis):
         if var not in df['name'].values:
             st.warning(f"Variável {var} não encontrada. Pulando...")
+            continue """
+    for var in reversed(variaveis):
+        # Verifica se existe uma variável que termina com 'var'
+        if not df['name'].str.endswith(var).any():
+            st.warning(f"Variável terminando com '{var}' não encontrada. Pulando...")
             continue
+    
             
         idx = df.index[df['name'] == var].tolist()[0]
         
@@ -498,7 +504,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey=remover_grupos_vazios(survey)
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
-    survey = gerar_campos_automaticos(survey, ['QEPE_DGE_SQE_B0_P0_id_questionario', 'QEPE_DGE_SQE_B0_P1_codigo_escola'])
+    survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola'])
     
     
     
