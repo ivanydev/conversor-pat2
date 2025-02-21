@@ -404,7 +404,7 @@ REGRAS = {
         "label_varavel": "Código da escola"
     },
     "DGE_SQE_B0_P3_fim_ano_lectivo": {
-        "calculation": lambda var_name: f"${{{var_name.replace('fim', 'inicio')}}} + 1",
+        "calculation": lambda var_name: f"${{{var_name.replace('fim', 'inicio').replace('P3', 'P2')}}} + 1",
         "constraint": "",
         "constraint_msg": "",
         "label_varavel": "fim do ano letivo"
