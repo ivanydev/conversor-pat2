@@ -454,7 +454,7 @@ def gerar_campos_automaticos(df, variaveis):
         # Criar uma linha "note" dinâmica abaixo
         note_row = {
             'type': 'note',
-            'name': f'show_{var_sufixo.split("_")[-1]}',
+            'name': f'show_aux_{var_sufixo.split("_")[-1]}',
             'label::Portugues (pt)': f'{label_varavel} : ${{{var_name}}}',
             'hint::Portugues (pt)': '',
             'required': 'false',
@@ -596,12 +596,12 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     groups_df['fim'] = groups_df['fim'].apply(remove_accents)
     
     
-    survey = add_groups(survey, groups_df)
-    survey=remover_grupos_vazios(survey)
+    
+    #survey=remover_grupos_vazios(survey)
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
     survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P3_fim_ano_lectivo'])
-    
+    survey = add_groups(survey, groups_df)
     
     
     # Adicionar linhas padrão
