@@ -546,10 +546,10 @@ def adicionar_calculos_automaticos(df, excel_path):
                 st.write(f"Variável somando: {var_clean}")
                 st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
                 st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
-                
+                st.write(f"LISTA DE padoes:{padroes}")
                 for padrao in padroes:
                     if((padrao in var_clean)):
-                        st.write(f"padrao: {padrao}\nvariavel Principal: {var_clean}\nVariavel somatorio: {var}")
+                        st.write(f"padrao: {padrao}<br/>variavel Principal: {var_clean}\nVariavel somatorio: {var}")
                 
             if any(padrao in var_clean for padrao in padroes)==True and not any(exc in var_clean for exc in excepto):
                 st.write(f"adicionou: {var}")
