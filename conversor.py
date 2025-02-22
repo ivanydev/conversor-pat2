@@ -537,7 +537,6 @@ def adicionar_calculos_automaticos(df, excel_path):
 
         # Filtrar variáveis que devem ser somadas, excluindo as do "excepto"
         vars_somar = []
-        st.write(" CALCULANDO SOATORIOS...")
         for var in vars_pergunta:
             var_clean = var.lower()
             if var_clean == target_var.lower():
