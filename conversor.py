@@ -541,7 +541,7 @@ def adicionar_calculos_automaticos(df, excel_path):
             var_clean = var.lower()
             if var_clean == target_var.lower():
                 continue
-            if(("DEE_SQ1CESGR_B1_P3" in target_var) or ("DEE_SQ1CESGR_B1_P3" in target_var)):
+            if(("DEE_SQ1CESGR_B1_P3_103" in target_var) or ("DEE_SQ1CESGR_B1_P3_104" in target_var)):
                 st.write(f"Variavel DO RESULTADO DA SOMA : {target_var}")
                 st.write(f"Variável somando: {var_clean}")
                 st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
