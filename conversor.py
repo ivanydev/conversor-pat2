@@ -551,7 +551,7 @@ def adicionar_calculos_automaticos(df, excel_path):
                     if((padrao in var_clean)):
                         st.write(f"padrao: {padrao}\nvariavel Principal: {var_clean}\nVariavel somatorio: {var}")
                 
-            if any(padrao in var_clean for padrao in padroes) and not any(exc in var_clean for exc in excepto):
+            if any(padrao in var_clean for padrao in padroes)==True and not any(exc in var_clean for exc in excepto):
                 vars_somar.append(var)
 
         if not vars_somar:
