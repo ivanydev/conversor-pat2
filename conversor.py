@@ -537,54 +537,19 @@ def adicionar_calculos_automaticos(df, excel_path):
 
         # Filtrar variáveis que devem ser somadas, excluindo as do "excepto"
         vars_somar = []
-        """ for var in vars_pergunta:
-            var_clean = var.lower()
-            if var_clean == target_var.lower():
-                continue
-            if(("DEE_SQ1CESGR_B1_P3_103" in target_var) or ("DEE_SQ1CESGR_B1_P3_104" in target_var)):
-                st.write(f"Variavel DO RESULTADO DA SOMA : {target_var}")
-                st.write(f"Variável somando: {var_clean}")
-                st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
-                st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
-                st.write(f"LISTA DE padoes:{padroes}")
-                for padrao in padroes:
-                    if((padrao in var_clean)):
-                        st.write(f"padrao: {padrao}<br/>variavel Principal: {var_clean}\nVariavel somatorio: {var}")
-                
-            if any(padrao in var_clean for padrao in padroes)==True and not any(exc in var_clean for exc in excepto):
-                st.write(f"adicionou: {var}")
-                vars_somar.append(var)
-            else:st.write(f"NEGOU: {var}")
-            st.write("====================================================================")  """
         for var in vars_pergunta:
             var_clean = var.lower()
             if var_clean == target_var.lower():
                 continue
-
-            if "DEE_SQ1CESGR_B1_P3_103" in target_var or "DEE_SQ1CESGR_B1_P3_104" in target_var:
-                st.write(f"Variável DO RESULTADO DA SOMA: {target_var}")
-                st.write(f"Variável somando: {var_clean}")
-                st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
-                st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
-                st.write(f"LISTA DE padrões: {padroes}")
+                #st.write(f"Variavel DO RESULTADO DA SOMA : {target_var}")
+                #st.write(f"Variável somando: {var_clean}")
+                #st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
+                #st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
+                #st.write(f"LISTA DE padoes:{padroes}")
                 
-                for padrao in padroes:
-                    if padrao in var_clean:
-                        st.write(f"🎯 Padrão encontrado: {padrao} ➝ Variável Principal: {var_clean} | Variável Somatório: {var}")
-
-            # Verifica se algum padrão está presente e se não há nenhum termo proibido
-            padrao_encontrado = next((padrao for padrao in padroes if padrao in var_clean), None)
-            if padrao_encontrado and not any(exc in var_clean for exc in excepto):
-                st.write(f"✅ Adicionou: {var} (Padrão: {padrao_encontrado})")
+            if any(padrao in var_clean for padrao in padroes)==True and not any(exc in var_clean for exc in excepto):
                 vars_somar.append(var)
-            else:
-                st.write(f"❌ NEGOU: {var}")
-
-            st.write("====================================================================")
-
-        
-        
-        
+         
         if not vars_somar:
             #print(f"⚠️ Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)} (exceto: {', '.join(excepto)})")
             continue
