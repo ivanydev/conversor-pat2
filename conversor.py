@@ -518,7 +518,7 @@ def adicionar_calculos_automaticos(df, excel_path):
 
     for _, row in padroes_df.iterrows():
         target_var = row['name']
-        pergunta = str(row['pergunta'])
+        pergunta = str(row['pergunta']).strip()
         padroes = [p.strip().lower() for p in str(row['padrao']).split(',')]
         excepto = [e.strip().lower() for e in str(row['excepto']).split(',') if e.strip()]
         #st.write(f"Variável alvo: {target_var}")
@@ -541,9 +541,15 @@ def adicionar_calculos_automaticos(df, excel_path):
             var_clean = var.lower()
             if var_clean == target_var.lower():
                 continue
+             
+            #st.write(f"target_var : {target_var}")
             #st.write(f"Variável: {var_clean}")
             #st.write(f"Padrão está em var: {any(padrao in var_clean for padrao in padroes)}")
             #st.write(f"Exceto está em var: {any(exc in var_clean for exc in excepto)}")
+            for padrao in padroes:
+                if((padrao in var_clean) and ("DEE_SQ1CESGR_B1_P3_103" in var_clean) or ("DEE_SQ1CESGR_B1_P3_104" in var_clean)):
+                    st.write(f"padrao: {padrao}\nvariavel: {var_clean}")
+                
             if any(padrao in var_clean for padrao in padroes) and not any(exc in var_clean for exc in excepto):
                 vars_somar.append(var)
 
