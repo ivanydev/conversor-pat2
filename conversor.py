@@ -550,10 +550,12 @@ def adicionar_calculos_automaticos(df, excel_path):
                 for padrao in padroes:
                     if((padrao in var_clean)):
                         st.write(f"padrao: {padrao}\nvariavel Principal: {var_clean}\nVariavel somatorio: {var}")
-                st.write("====================================================================") 
+                
             if any(padrao in var_clean for padrao in padroes)==True and not any(exc in var_clean for exc in excepto):
+                st.write(f"adicionou: {var}")
                 vars_somar.append(var)
-
+            else:st.write(f"NEGOU: {var}")
+            st.write("====================================================================") 
         if not vars_somar:
             #print(f"⚠️ Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)} (exceto: {', '.join(excepto)})")
             continue
