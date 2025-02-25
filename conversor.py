@@ -44,10 +44,98 @@ def remover_grupos_vazios(df):
     return df_limpo
  
 
+ 
+
+def aplicar_regex(df):
+    arquivo_validacoes="regex.xlsx"
+    # Carregar a tabela de validações
+    validacoes = pd.read_excel(arquivo_validacoes)
+
+    # Garantir que as colunas necessárias estão presentes
+    colunas_necessarias = {"padrao", "excepto", "constraint", "constraint_message"}
+    if not colunas_necessarias.issubset(validacoes.columns):
+        raise ValueError(f"O arquivo {arquivo_validacoes} deve conter as colunas: {colunas_necessarias}")
+
+    # Adiciona colunas de validação ao DataFrame original
+    df["constraint"] = None
+    df["constraint_message"] = None
+
+    for index, row in validacoes.iterrows():
+        padrao = row["padrao"].lower().strip()
+        excepto = str(row["excepto"]).lower().strip() if pd.notna(row["excepto"]) else None
+        constraint = row["constraint"]
+        constraint_message = row["constraint_message"]
+
+        # Aplicar a validação: se o padrão estiver na variável e excepto não estiver
+        mask = df["name"].str.contains(padrao, case=False, na=False)
+        if excepto:
+            mask &= ~df["name"].str.contains(excepto, case=False, na=False)
+
+        # Aplicar as constraints às linhas que atendem ao critério
+        df.loc[mask, "constraint"] = constraint
+        df.loc[mask, "constraint_message"] = constraint_message
+        #df.loc[mask, "appearance"] = "w10"
+
+    return df
 
 
 
+ 
+def atualizar_df_com_selects(df, caminho_selects):
+    """
+    Atualiza o DataFrame com os campos relevant, choice_filter e type
+    com base no arquivo selects.xlsx.
+    """
+    try:
+        # Ler o arquivo de selects
+        selects_df = pd.read_excel(caminho_selects)
 
+        # Normalizar os nomes das colunas (remover espaços e converter para minúsculas)
+        selects_df.columns = selects_df.columns.str.strip().str.lower()
+
+        # Verificar se as colunas necessárias estão presentes
+        colunas_necessarias = {"type", "variavel", "choice_filter"}
+        colunas_arquivo = set(selects_df.columns)
+        
+        if not colunas_necessarias.issubset(colunas_arquivo):
+            colunas_faltantes = colunas_necessarias - colunas_arquivo
+            raise ValueError(f"O arquivo {caminho_selects} deve conter as colunas: {colunas_faltantes}")
+
+        # Criar uma cópia do DataFrame para evitar modificações inplace
+        novo_df = df.copy()
+
+        # Iterar sobre as linhas do arquivo de selects
+        for _, select_row in selects_df.iterrows():
+            variavel = select_row["variavel"]
+            tipo = select_row["type"]
+            choice_filter = select_row.get("choice_filter", "")  # Usar get para evitar KeyError
+
+            # Criar a máscara correta para encontrar as variáveis que terminam com 'variavel'
+            mask = novo_df["name"].str.endswith(variavel, na=False)
+                        # Pegar o primeiro índice onde a condição é verdadeira
+  
+            # Verificar se a máscara encontrou algo antes de atualizar
+            if mask.any():
+                # Atualizar os valores apenas nas linhas filtradas
+                novo_df.loc[mask, "type"] = tipo
+                if pd.notna(choice_filter):
+                    first_index = mask.idxmax()
+                    variavel_original = novo_df.loc[first_index, "name"]
+                    ListChoices=choice_filter.split("=")
+                    choice_1=ListChoices[0]
+                    choice_2=ListChoices[1].replace('${','').replace('}','')
+                    prefixo=variavel_original.split('_')[0]
+                    choice_final=f"{choice_1}=${{{prefixo}_{choice_2}}}"
+                    
+                    novo_df.loc[mask, "choice_filter"] = f"{choice_final}"  
+            
+        return novo_df
+
+    except Exception as e:
+        raise ValueError(f"Erro ao processar o arquivo {caminho_selects}: {str(e)}")
+
+
+ 
 def remove_line_breaks(df):
     if 'name' in df.columns:
         df['name'] = df['name'].astype(str).str.replace(r'[\n\r]', '', regex=True)
@@ -564,7 +652,7 @@ def adicionar_calculos_automaticos(df, excel_path):
         df.loc[df['name'] == target_var, 'calculation'] = new_calculation
         df.loc[df['name'] == target_var, 'type'] = 'calculate'
     st.write("Cálculos automáticos adicionados com sucesso.")
-    st.write("==💘 TE AMO MORZINHA MINHA XUXÚ MÃE DA ODVÂNYA 💘==")
+    st.write("==CONCLUÍDO==")
     return df
 
 # Função para converter os dados do Excel para XLSForm
@@ -604,6 +692,9 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
     survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P3_fim_ano_lectivo'])
+    survey=aplicar_regex(survey)
+    #survey=adicionar_validacao_tempo_real(survey)
+    survey=atualizar_df_com_selects(survey, "selects.xlsx")
     survey = add_groups(survey, groups_df)
     
     
@@ -619,13 +710,34 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     ["audit", "audit", "", "", "", "", "", "", "", "", ""]
    ]
     
-    survey = pd.concat([pd.DataFrame(standard_rows, columns=survey.columns), survey], ignore_index=True)
+    
+   # survey = pd.concat([pd.DataFrame(standard_rows, columns=survey.columns), survey], ignore_index=True)
+    
+        # Criar um DataFrame vazio com as mesmas colunas de survey
+    standard_rows_df = pd.DataFrame(columns=survey.columns)
+
+    # Adicionar os dados corretamente
+    for row in standard_rows:
+        row_dict = dict(zip(survey.columns, row + [""] * (len(survey.columns) - len(row))))
+        standard_rows_df = pd.concat([standard_rows_df, pd.DataFrame([row_dict])], ignore_index=True)
+
+    # Concatenar com survey
+    survey = pd.concat([standard_rows_df, survey], ignore_index=True)
+    
     
     # Criar abas adicionais
-    choices = pd.DataFrame(columns=["list_name", "name", "label::Portugues (pt)"])
-    if "choices" in survey.columns:
-        choices = survey[["choices"]].dropna().drop_duplicates()
-        choices = choices.assign(list_name=choices["choices"], name=choices["choices"], label=choices["choices"])
+    #choices = pd.DataFrame(columns=["list_name", "name", "label::Portugues (pt)"])
+    #if "choices" in survey.columns:
+    #    choices = survey[["choices"]].dropna().drop_duplicates()
+    #    choices = choices.assign(list_name=choices["choices"], name=choices["choices"], label=choices["choices"])
+        
+    # Carregar o arquivo choiceGood.xlsx
+    caminho_choices = "formWithChoiceGood.xlsx"
+    # Ler a aba "choices" do arquivo
+    choices = pd.read_excel(caminho_choices, sheet_name="choices")
+    # Verificar se o arquivo foi carregado corretamente
+    if choices.empty:
+        raise ValueError("A aba 'choices' do arquivo formWithChoiceGood.xlsx está vazia!")
     
     settings = pd.DataFrame({"form_title": ["Formulário PAT"], "form_id": ["form_pat"]})
     
