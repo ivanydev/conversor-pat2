@@ -364,17 +364,17 @@ def add_groups(survey_df, groups_df):
         for _, group in groups_df.iterrows():
             group_name = group['name']
             #st.write(f"======================================================================================")
-            #st.write(f"Processando grupo: {group_name}")
+            st.write(f"Processando grupo: {group_name}")
             
             if group_name in existing_groups:
-                #st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
+                st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
                 continue
                 
             start_field = remove_accents(group['inicio']).strip()
             end_field = remove_accents(group['fim']).strip()
-            #st.write(f"Campos de início/fim: '{start_field}' / '{end_field}'")
-            #st.write(f"Campo start_field está em metadados?: { start_field in survey_df['name'].str.strip().tolist()}")
-            #st.write(f"Campo end_field está em metadados?: { end_field in survey_df['name'].str.strip().tolist()}")
+            st.write(f"Campos de início/fim: '{start_field}' / '{end_field}'")
+            st.write(f"Campo start_field está em metadados?: { start_field in survey_df['name'].str.strip().tolist()}")
+            st.write(f"Campo end_field está em metadados?: { end_field in survey_df['name'].str.strip().tolist()}")
              
                
             start_mask = survey_df['name'].str.strip() == start_field.strip()
