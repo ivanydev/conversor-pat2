@@ -662,7 +662,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     all_surveys = []
     
     for sheet_name in xls.sheet_names:
-        #st.write(f"Processando planilha: {sheet_name}")
+        st.write(f"Processando planilha: {sheet_name}")
         df = pd.read_excel(data_file, sheet_name=sheet_name, header=None)
         processed = process_sheet(df)
         if processed is not None:
