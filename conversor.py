@@ -419,7 +419,7 @@ def add_groups(survey_df, groups_df):
             
             # Reordenar e resetar índices
             survey_df = survey_df.sort_index().reset_index(drop=True)
-            st.write(f"Grupos adicionados com sucesso. {group_name}")
+            
     return survey_df
  
 #=========================================================================
