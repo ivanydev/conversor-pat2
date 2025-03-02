@@ -6,6 +6,8 @@ from io import BytesIO
 import pandas as pd
 import streamlit as st
 
+# Criar um espaço vazio para "limpar" a tela
+placeholder = st.empty()
 
 def remover_grupos_vazios(df):
     """
@@ -365,7 +367,7 @@ def add_groups(survey_df, groups_df):
             group_name = group['name']
             #st.write(f"======================================================================================")
             st.write(f"Processando grupo: {group_name}")
-            st.write("\033[H\033[J", end="") 
+            placeholder.empty() 
               # Limpar a tela
             if group_name in existing_groups:
                 st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
