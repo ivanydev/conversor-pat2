@@ -15,7 +15,7 @@ def remover_grupos_vazios(df):
     
     Parâmetros:
         df (pd.DataFrame): DataFrame com os dados do formulário
-    
+     
     Retorna:
         pd.DataFrame: DataFrame sem os grupos vazios
     """
