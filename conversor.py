@@ -287,7 +287,7 @@ def find_header_row(df_temp):
             return i
     return None
 
-def process_sheet(df):
+def process_sheet(df,sheet_name):
     header_row = find_header_row(df)
     if header_row is None:
         return None
@@ -301,7 +301,7 @@ def process_sheet(df):
     missing_columns = [col for col in expected_columns if col not in lista]
     
     if missing_columns:
-        st.write(f"As seguintes colunas não foram encontradas nesta planilha: {missing_columns}. Pulando...")
+        st.write(f"As seguintes colunas não foram encontradas nesta planilha ({sheet_name}): {missing_columns}. Pulando...")
         return None
     
     df = df.dropna(how='all').dropna(axis=1, how='all')
@@ -612,7 +612,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     for sheet_name in xls.sheet_names:
         #st.write(f"Processando planilha: {sheet_name}")
         df = pd.read_excel(data_file, sheet_name=sheet_name, header=None)
-        processed = process_sheet(df)
+        processed = process_sheet(df,sheet_name)
         if processed is not None:
             #st.write(f"Planilha {sheet_name} processada com sucesso.")
             all_surveys.append(processed)
