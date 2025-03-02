@@ -366,8 +366,7 @@ def add_groups(survey_df, groups_df):
         for _, group in groups_df.iterrows():
             group_name = group['name']
             #st.write(f"======================================================================================")
-            st.write(f"Processando grupo: {group_name}")
-            st.clear()
+            #st.write(f"Processando grupo: {group_name}")
               # Limpar a tela
             if group_name in existing_groups:
                 st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
@@ -375,16 +374,16 @@ def add_groups(survey_df, groups_df):
                 
             start_field = remove_accents(group['inicio']).strip()
             end_field = remove_accents(group['fim']).strip()
-            st.write(f"Campos de início/fim: '{start_field}' / '{end_field}'")
-            st.write(f"Campo start_field está em metadados?: { start_field in survey_df['name'].str.strip().tolist()}")
-            st.write(f"Campo end_field está em metadados?: { end_field in survey_df['name'].str.strip().tolist()}")
+            #st.write(f"Campos de início/fim: '{start_field}' / '{end_field}'")
+            #st.write(f"Campo start_field está em metadados?: { start_field in survey_df['name'].str.strip().tolist()}")
+            #st.write(f"Campo end_field está em metadados?: { end_field in survey_df['name'].str.strip().tolist()}")
              
                
             start_mask = survey_df['name'].str.strip() == start_field.strip()
             end_mask = survey_df['name'].str.strip() == end_field.strip()
             
             if not start_mask.any() or not end_mask.any():
-                #st.write(f"Campos de início/fim não encontrados. Pulando... {end_mask.any()} {start_mask.any()}")
+                st.write(f"Campos de início/fim não encontrados. Pulando... {end_mask.any()} {start_mask.any()}")
                 continue
             
             start_idx = survey_df[start_mask].index[0]
@@ -422,61 +421,7 @@ def add_groups(survey_df, groups_df):
             survey_df = survey_df.sort_index().reset_index(drop=True)
             st.write(f"Grupos adicionados com sucesso. {group_name}")
     return survey_df
-#=========================================================================
-def gerar_campos_automaticosXXXX(df, variaveis):
-    """
-    Modifica as variáveis existentes para calculate e cria notes correspondentes
-    """
-    df = df.copy()
-    
-    for var in reversed(variaveis):
-        # Verifica se existe uma variável que termina com 'var'
-        if not df['name'].str.endswith(var).any():
-            st.warning(f"Variável terminando com '{var}' não encontrada. Pulando...")
-            continue
-    
-        info = ""
-        if 'questionario' in var:
-            info = "ID do questionário"
-        elif 'codigo_escola' in var:
-            info = "Código da escola"
-        elif 'fim_ano_lectivo' in var:
-            info = "Data de fim do ano letivo"
-            
-        idx = df.index[df['name'].str.endswith(var)].tolist()[0]
-        
-        # Modificar a linha existente (calculate)
-        df.at[idx, 'type'] = 'calculate'
-        if 'fim_ano_lectivo' in var:
-            df.at[idx, 'calculation'] = '${inicio_ano_lectivo} + 1'
-        else:
-            df.at[idx, 'calculation'] = 'substr(uuid(), 0, 8)'
-            df.at[idx, 'constraint'] = f"regex(., '^[0-9]{{1,{10 if 'questionario' in var else 11}}}$')"
-            df.at[idx, 'constraint_message'] = f'Deve conter somente dígitos e ter no máximo {10 if "questionario" in var else 11} caracteres.'
-        
-        df.at[idx, 'label::Portugues (pt)'] = f'{info}: ${{{var}}}'
-        
-        # Criar note row
-        note_row = {
-            'type': 'note',
-            'name': f'show_{var.split("_")[-1]}',
-            'label::Portugues (pt)': f'ID : ${{{var}}}',
-            'hint::Portugues (pt)': '',
-            'required': 'false',
-            'appearance': '',
-            'constraint': '',
-            'calculation': '',
-            'constraint_message': '',
-            'relevant': '',
-            'choice_filter': ''
-        }
-        
-        # Inserir note row abaixo da variável modificada
-        df.loc[idx + 0.5] = note_row
-    
-    # Reordenar e resetar índices
-    return df.sort_index().reset_index(drop=True)
-
+ 
 #=========================================================================
 # 📌 Dicionário de regras sem os prefixos (mapeia somente o sufixo real da variável)
 
@@ -665,7 +610,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     all_surveys = []
     
     for sheet_name in xls.sheet_names:
-        st.write(f"Processando planilha: {sheet_name}")
+        #st.write(f"Processando planilha: {sheet_name}")
         df = pd.read_excel(data_file, sheet_name=sheet_name, header=None)
         processed = process_sheet(df)
         if processed is not None:
