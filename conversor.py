@@ -359,7 +359,7 @@ def add_groups(survey_df, groups_df):
     groups_df = groups_df.dropna(subset=['inicio', 'fim'])
     existing_groups = set()
     st.write("======================= ADICIONANDO GUPOS ==========================")
-
+    
     for _ in range(2):  # Duas verificações
         for _, group in groups_df.iterrows():
             group_name = group['name']
@@ -417,7 +417,7 @@ def add_groups(survey_df, groups_df):
             
             # Reordenar e resetar índices
             survey_df = survey_df.sort_index().reset_index(drop=True)
-    
+            st.write(f"Grupos adicionados com sucesso. {group_name}")
     return survey_df
 #=========================================================================
 def gerar_campos_automaticosXXXX(df, variaveis):
