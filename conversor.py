@@ -359,7 +359,7 @@ def add_groups(survey_df, groups_df):
     groups_df = groups_df.dropna(subset=['inicio', 'fim'])
     existing_groups = set()
     st.write("======================= ADICIONANDO GUPOS ==========================")
-    st.write(f"Grupos existentes no config.xls: {groups_df['name'].tolist()}")
+    st.write(f"Variaveis existentes no config.xls: {survey_df['name'].tolist()}")
     for _ in range(2):  # Duas verificações
         for _, group in groups_df.iterrows():
             group_name = group['name']
