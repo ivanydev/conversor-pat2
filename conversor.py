@@ -369,7 +369,7 @@ def add_groups(survey_df, groups_df):
             #st.write(f"Processando grupo: {group_name}")
               # Limpar a tela
             if group_name in existing_groups:
-                st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
+                #st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
                 continue
                 
             start_field = remove_accents(group['inicio']).strip()
@@ -383,7 +383,7 @@ def add_groups(survey_df, groups_df):
             end_mask = survey_df['name'].str.strip() == end_field.strip()
             
             if not start_mask.any() or not end_mask.any():
-                st.write(f"Campos de início/fim não encontrados. Pulando... {end_mask.any()} {start_mask.any()}")
+                #st.write(f"Campos de início/fim não encontrados. Pulando... {end_mask.any()} {start_mask.any()}")
                 continue
             
             start_idx = survey_df[start_mask].index[0]
