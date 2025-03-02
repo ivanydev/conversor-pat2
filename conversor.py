@@ -367,7 +367,7 @@ def add_groups(survey_df, groups_df):
             group_name = group['name']
             #st.write(f"======================================================================================")
             st.write(f"Processando grupo: {group_name}")
-            placeholder.empty() 
+            st.empty() 
               # Limpar a tela
             if group_name in existing_groups:
                 st.write(f"Grupo {group_name} já foi adicionado. Pulando...")
