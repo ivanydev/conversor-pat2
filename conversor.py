@@ -82,7 +82,56 @@ def aplicar_regex(df):
 
 
 
- 
+
+def atualizar_df_com_relevant(df, caminho_relevants):
+    """
+    Atualiza o DataFrame com os campos 'relevant' com base no arquivo relevants.xlsx.
+    """
+    try:
+        # Ler o arquivo de relevants
+        relevants_df = pd.read_excel(caminho_relevants)
+
+        # Normalizar os nomes das colunas (remover espaços e converter para minúsculas)
+        relevants_df.columns = relevants_df.columns.str.strip().str.lower()
+
+        # Verificar se as colunas necessárias estão presentes
+        colunas_necessarias = {"variavel", "relevante"}
+        colunas_arquivo = set(relevants_df.columns)
+        
+        if not colunas_necessarias.issubset(colunas_arquivo):
+            colunas_faltantes = colunas_necessarias - colunas_arquivo
+            raise ValueError(f"O arquivo {caminho_relevants} deve conter as colunas: {colunas_faltantes}")
+
+        # Criar uma cópia do DataFrame para evitar modificações inplace
+        novo_df = df.copy()
+
+        # Iterar sobre as linhas do arquivo de relevants
+        for _, relevant_row in relevants_df.iterrows():
+            variavel = relevant_row["variavel"]
+            relevant_value = relevant_row["relevante"]
+
+            # Criar a máscara correta para encontrar as variáveis que terminam com 'variavel'
+            mask = novo_df["name"].str.endswith(variavel.replace("(prefixo)_",""), na=False)
+            
+            # Verificar se a máscara encontrou algo antes de atualizar
+            if mask.any():
+                first_index = mask.idxmax()  # Pegar o primeiro índice onde a condição é verdadeira
+                variavel_original = novo_df.loc[first_index, "name"]
+                
+                # Substituir o prefixo na variável relevante
+                prefixo = variavel_original.split('_')[0]
+                relevant_final = relevant_value.replace("(prefixo)", f"{prefixo}")
+                
+                # Atualizar o campo 'relevant'
+                novo_df.loc[mask, "relevant"] = relevant_final
+
+        return novo_df
+    
+    except Exception as e:
+        raise ValueError(f"Erro ao processar o arquivo {caminho_relevants}: {str(e)}")
+
+
+
 def atualizar_df_com_selects(df, caminho_selects):
     """
     Atualiza o DataFrame com os campos relevant, choice_filter e type
@@ -643,6 +692,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey=aplicar_regex(survey)
     #survey=adicionar_validacao_tempo_real(survey)
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
+    survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
     survey = add_groups(survey, groups_df)
     
     
@@ -680,7 +730,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     #    choices = choices.assign(list_name=choices["choices"], name=choices["choices"], label=choices["choices"])
         
     # Carregar o arquivo choiceGood.xlsx
-    caminho_choices = "formWithChoiceGood.xlsx"
+    caminho_choices = "Choices.xlsx"
     # Ler a aba "choices" do arquivo
     choices = pd.read_excel(caminho_choices, sheet_name="choices")
     # Verificar se o arquivo foi carregado corretamente
