@@ -737,7 +737,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     if choices.empty:
         raise ValueError("A aba 'choices' do arquivo formWithChoiceGood.xlsx está vazia!")
     
-    settings = pd.DataFrame({"form_title": ["Formulário PAT"], "form_id": ["form_pat"]})
+    settings = pd.DataFrame({"form_title": ["Formulário PAT"], "form_id": ["form_pat"],"allow_choice_duplicates": ["yes"]})
     
     output = BytesIO()
     with pd.ExcelWriter(output, engine='openpyxl') as writer:
