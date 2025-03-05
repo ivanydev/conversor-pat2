@@ -172,11 +172,11 @@ def atualizar_df_com_selects(df, caminho_selects):
                 if pd.notna(choice_filter):
                     first_index = mask.idxmax()
                     variavel_original = novo_df.loc[first_index, "name"]
-                    ListChoices=choice_filter.split("=")
-                    choice_1=ListChoices[0]
-                    choice_2=ListChoices[1].replace('${','').replace('}','')
-                    prefixo=variavel_original.split('_')[0]
-                    choice_final=f"{choice_1}=${{{prefixo}_{choice_2}}}"
+                    #ListChoices=choice_filter.split("=")
+                    #choice_1=ListChoices[0]
+                    #choice_2=ListChoices[1].replace('${','').replace('}','')
+                    prefixo = variavel_original.split('_')[0]
+                    choice_final = choice_filter.replace("(prefixo)", f"{prefixo}")
                     
                     novo_df.loc[mask, "choice_filter"] = f"{choice_final}"  
             
@@ -240,6 +240,152 @@ def is_valid_variable_name(name):
     return re.match(r'^[a-zA-Z_][a-zA-Z0-9_]*$', ascii_name) is not None
 
 
+
+
+
+
+
+def adicionar_geolocalizacao_da_escola(df):
+    """
+    Adiciona variáveis de geolocalização ao formulário, permitindo que o usuário escolha se deseja capturar a localização.
+    """
+
+    # Definição da pergunta de seleção (menu dropdown com "Sim" ou "Não")
+    campos_selecao = [
+        {
+            "type": "select_one capturar_localizacao_escola",
+            "name": "capturar_localizacao",
+            "label::Portugues (pt)": "Deseja capturar a geolocalização agora?",
+            "required": "false",
+            "appearance": "minimal"
+        }
+    ]
+
+    # Definição dos campos de geolocalização
+    campos_geolocalizacao = [
+        {
+            "type": "geopoint",
+            "name": "geolocalizacao_escola",
+            "label::Portugues (pt)": "Geolocalização da Escola",
+            "hint::Portugues (pt)": "Clique no mapa para capturar a localização automaticamente.",
+            "required": "false",
+            "appearance": "placement-map",
+            "relevant": "${capturar_localizacao} = 'sim'"
+        },
+        {
+            "type": "calculate",
+            "name": "latitude",
+            "label::Portugues (pt)": "Latitude",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'",
+            "calculation": "pulldata('geolocalizacao_escola', 'latitude')"
+        },
+        {
+            "type": "calculate",
+            "name": "longitude",
+            "label::Portugues (pt)": "Longitude",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'",
+            "calculation": "pulldata('geolocalizacao_escola', 'longitude')"
+        },
+        {
+            "type": "calculate",
+            "name": "altitude",
+            "label::Portugues (pt)": "Altitude",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'",
+            "calculation": "pulldata('geolocalizacao_escola', 'altitude')"
+        },
+        {
+            "type": "calculate",
+            "name": "precisao",
+            "label::Portugues (pt)": "Precisão",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'",
+            "calculation": "pulldata('geolocalizacao_escola', 'accuracy')"
+        }
+    ]
+
+    # Criar DataFrames para os novos campos
+    selecao_df = pd.DataFrame(campos_selecao)
+    geolocalizacao_df = pd.DataFrame(campos_geolocalizacao)
+
+    # Concatenar ao DataFrame original
+    novo_df = pd.concat([df, selecao_df, geolocalizacao_df], ignore_index=True)
+
+    return novo_df
+
+
+
+def adicionar_geolocalizacao_da_escolaXX(df):
+    """
+    Adiciona variáveis de geolocalização ao DataFrame, permitindo que o usuário escolha
+    se deseja capturar a localização antes de exibir o campo de geolocalização.
+    """
+    # Campos de escolha do usuário
+    campos_selecao = [
+        {
+            "type": "select_one capturar_localizacao_escola",
+            "name": "capturar_localizacao",
+            "label::Portugues (pt)": "Deseja capturar a geolocalização agora?",
+            "required": "false",
+            "appearance": "minimal",
+        }
+    ]
+
+    # Campos de geolocalização com relevância condicional
+    campos_geolocalizacao = [
+        {
+            "type": "geopoint",
+            "name": "geolocalizacao_escola",
+            "label::Portugues (pt)": "Geolocalização da Escola",
+            "hint::Portugues (pt)": "Capture a localização quando estiver no local correto.",
+            "required": "false",
+            "appearance": "placement-map",
+            "relevant": "${capturar_localizacao} = 'sim'"
+        },
+        {
+            "type": "text",
+            "name": "latitude",
+            "label::Portugues (pt)": "Latitude",
+            "hint::Portugues (pt)": "Latitude da escola.",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'"
+        },
+        {
+            "type": "text",
+            "name": "longitude",
+            "label::Portugues (pt)": "Longitude",
+            "hint::Portugues (pt)": "Longitude da escola.",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'"
+        },
+        {
+            "type": "text",
+            "name": "altitude",
+            "label::Portugues (pt)": "Altitude",
+            "hint::Portugues (pt)": "Altitude da escola.",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'"
+        },
+        {
+            "type": "text",
+            "name": "precisao",
+            "label::Portugues (pt)": "Precisão",
+            "hint::Portugues (pt)": "Precisão da localização da escola.",
+            "required": "false",
+            "relevant": "${capturar_localizacao} = 'sim'"
+        }
+    ]
+
+    # Criar DataFrames para os novos campos
+    selecao_df = pd.DataFrame(campos_selecao)
+    geolocalizacao_df = pd.DataFrame(campos_geolocalizacao)
+
+    # Concatenar ao DataFrame original
+    novo_df = pd.concat([df, selecao_df, geolocalizacao_df], ignore_index=True)
+
+    return novo_df
 
 
 def check_variable_names(df):
@@ -488,6 +634,12 @@ REGRAS = {
         "calculation": "substr(uuid(), 0, 8)",
         "label_varavel": "Código da escola"
     },
+    "DGE_SQE_B0_P2_inicio_ano_lectivo": {
+        "calculation": "2024",
+        "constraint": "",
+        "constraint_msg": "",
+        "label_varavel": "Início do ano letivo"
+    },
     "DGE_SQE_B0_P3_fim_ano_lectivo": {
         "calculation": lambda var_name: f"${{{var_name.replace('fim', 'inicio').replace('P3', 'P2')}}} + 1",
         "constraint": "",
@@ -539,7 +691,7 @@ def gerar_campos_automaticos(df, variaveis):
         # Criar uma linha "note" dinâmica abaixo
         note_row = {
             'type': 'note',
-            'name': f'show_aux_{var_sufixo.split("_")[-1]}',
+            'name': f'show_aux_{var_sufixo}',
             'label::Portugues (pt)': f'{label_varavel} : ${{{var_name}}}',
             'hint::Portugues (pt)': '',
             'required': 'false',
@@ -688,11 +840,12 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     #survey=remover_grupos_vazios(survey)
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
-    survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P3_fim_ano_lectivo'])
-    survey=aplicar_regex(survey)
+    survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P2_inicio_ano_lectivo', 'DGE_SQE_B0_P3_fim_ano_lectivo'])
+    survey=aplicar_regex(survey) 
     #survey=adicionar_validacao_tempo_real(survey)
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
     survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
+    survey=adicionar_geolocalizacao_da_escola(survey)
     survey = add_groups(survey, groups_df)
     
     
