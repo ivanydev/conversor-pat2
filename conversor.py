@@ -317,76 +317,40 @@ def adicionar_geolocalizacao_da_escola(df):
 
 
 
-def adicionar_geolocalizacao_da_escolaXX(df):
+ 
+ 
+def adicionar_campos_exibicao_totais(df):
     """
-    Adiciona variáveis de geolocalização ao DataFrame, permitindo que o usuário escolha
-    se deseja capturar a localização antes de exibir o campo de geolocalização.
+    Adiciona campos de exibição para todas as variáveis do tipo 'calculate' 
+    cujo nome contenha '_total' ou 'total_', posicionando-os logo abaixo das respectivas variáveis.
     """
-    # Campos de escolha do usuário
-    campos_selecao = [
-        {
-            "type": "select_one capturar_localizacao_escola",
-            "name": "capturar_localizacao",
-            "label::Portugues (pt)": "Deseja capturar a geolocalização agora?",
-            "required": "false",
-            "appearance": "minimal",
-        }
-    ]
+    # Criar uma cópia do DataFrame original para modificar
+    novo_df = df.copy()
+    linhas_para_inserir = []  # Lista para armazenar as novas linhas e seus índices de inserção
 
-    # Campos de geolocalização com relevância condicional
-    campos_geolocalizacao = [
-        {
-            "type": "geopoint",
-            "name": "geolocalizacao_escola",
-            "label::Portugues (pt)": "Geolocalização da Escola",
-            "hint::Portugues (pt)": "Capture a localização quando estiver no local correto.",
-            "required": "false",
-            "appearance": "placement-map",
-            "relevant": "${capturar_localizacao} = 'sim'"
-        },
-        {
-            "type": "text",
-            "name": "latitude",
-            "label::Portugues (pt)": "Latitude",
-            "hint::Portugues (pt)": "Latitude da escola.",
-            "required": "false",
-            "relevant": "${capturar_localizacao} = 'sim'"
-        },
-        {
-            "type": "text",
-            "name": "longitude",
-            "label::Portugues (pt)": "Longitude",
-            "hint::Portugues (pt)": "Longitude da escola.",
-            "required": "false",
-            "relevant": "${capturar_localizacao} = 'sim'"
-        },
-        {
-            "type": "text",
-            "name": "altitude",
-            "label::Portugues (pt)": "Altitude",
-            "hint::Portugues (pt)": "Altitude da escola.",
-            "required": "false",
-            "relevant": "${capturar_localizacao} = 'sim'"
-        },
-        {
-            "type": "text",
-            "name": "precisao",
-            "label::Portugues (pt)": "Precisão",
-            "hint::Portugues (pt)": "Precisão da localização da escola.",
-            "required": "false",
-            "relevant": "${capturar_localizacao} = 'sim'"
-        }
-    ]
+    for index, row in df.iterrows():
+        if row["type"] == "calculate" and ("_total" in row["name"] or "total_" in row["name"]):
+            campo_exibicao = {
+                "type": "note",
+                "name": f"exibir_{row['name']}",
+                "label::Portugues (pt)": f"Total de {row['name'].replace('_', ' ').title()}: ${{{row['name']}}}"
+            }
+            # Adicionar a nova linha e o índice onde ela deve ser inserida
+            linhas_para_inserir.append((index + 1, campo_exibicao))
 
-    # Criar DataFrames para os novos campos
-    selecao_df = pd.DataFrame(campos_selecao)
-    geolocalizacao_df = pd.DataFrame(campos_geolocalizacao)
-
-    # Concatenar ao DataFrame original
-    novo_df = pd.concat([df, selecao_df, geolocalizacao_df], ignore_index=True)
+    # Inserir as novas linhas de exibição na posição correta
+    deslocamento = 0  # Para corrigir os índices após inserções sucessivas
+    for pos, linha in linhas_para_inserir:
+        novo_df = pd.concat([
+            novo_df.iloc[:pos + deslocamento],  # Até a posição onde será inserido
+            pd.DataFrame([linha]),  # Nova linha
+            novo_df.iloc[pos + deslocamento:]  # Restante do DataFrame
+        ]).reset_index(drop=True)
+        deslocamento += 1  # Ajustar o índice para cada nova inserção
 
     return novo_df
 
+ 
 
 def check_variable_names(df):
     """Verifica nomes de variáveis e retorna os inválidos destacando o erro dentro da string"""
@@ -715,6 +679,8 @@ def gerar_campos_automaticos(df, variaveis):
  
 # Função para adicionar cálculos automáticos baseados em padrões de um Excel
 def adicionar_calculos_automaticos(df, excel_path):
+    st.write("Adicionando cálculos automáticos...")
+    st.json(df['name'].values.tolist())
     """
     Adiciona cálculos automáticos baseados em padrões de um Excel, evitando ciclos.
 
@@ -841,6 +807,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
     survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P2_inicio_ano_lectivo', 'DGE_SQE_B0_P3_fim_ano_lectivo'])
+    survey = adicionar_campos_exibicao_totais(survey)
     survey=aplicar_regex(survey) 
     #survey=adicionar_validacao_tempo_real(survey)
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
