@@ -112,7 +112,8 @@ def atualizar_df_com_relevant(df, caminho_relevants):
 
             # Criar a máscara correta para encontrar as variáveis que terminam com 'variavel'
             mask = novo_df["name"].str.endswith(variavel.replace("(prefixo)_",""), na=False)
-            
+            if(variavel.len()<=5):
+                mask = novo_df["name"].str.startswith(variavel, na=False)
             # Verificar se a máscara encontrou algo antes de atualizar
             if mask.any():
                 first_index = mask.idxmax()  # Pegar o primeiro índice onde a condição é verdadeira
