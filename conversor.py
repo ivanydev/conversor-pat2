@@ -807,13 +807,13 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey = adicionar_calculos_automaticos(survey, padroes_file)
     # Lista de variáveis para automação
     survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P2_inicio_ano_lectivo', 'DGE_SQE_B0_P3_fim_ano_lectivo'])
-    survey = adicionar_campos_exibicao_totais(survey)
     survey=aplicar_regex(survey) 
     #survey=adicionar_validacao_tempo_real(survey)
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
     survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
     survey=adicionar_geolocalizacao_da_escola(survey)
     survey = add_groups(survey, groups_df)
+    survey = adicionar_campos_exibicao_totais(survey)
     
     
     # Adicionar linhas padrão
