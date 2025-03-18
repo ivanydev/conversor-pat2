@@ -109,11 +109,16 @@ def atualizar_df_com_relevant(df, caminho_relevants):
         for _, relevant_row in relevants_df.iterrows():
             variavel = relevant_row["variavel"]
             relevant_value = relevant_row["relevante"]
+                        # Criar a máscara
+            if (len(variavel) <= 5):
+                #mask = novo_df["name"].str.upper().str.startswith(f'{variavel.upper()}_', na=False)
+                mask=(novo_df["name"].str.upper().str.startswith(f"{variavel.upper()}_", na=False)) & \
+                       (novo_df["type"].str.lower() == "begin_group")
+                #print(f"🔎 Verificando variável: {variavel} | Quantidade encontrada: {mask.sum()}")
+            else:
+                mask = novo_df["name"].str.endswith(variavel.replace("(prefixo)_", ""), na=False)
 
-            # Criar a máscara correta para encontrar as variáveis que terminam com 'variavel'
-            mask = novo_df["name"].str.endswith(variavel.replace("(prefixo)_",""), na=False)
-            if(len(variavel)<=5):
-                mask = novo_df["name"].str.startswith(variavel, na=False)
+            
             # Verificar se a máscara encontrou algo antes de atualizar
             if mask.any():
                 first_index = mask.idxmax()  # Pegar o primeiro índice onde a condição é verdadeira
@@ -125,7 +130,7 @@ def atualizar_df_com_relevant(df, caminho_relevants):
                 
                 # Atualizar o campo 'relevant'
                 novo_df.loc[mask, "relevant"] = relevant_final
-
+                #if (len(variavel) <= 5):print(f"✅ Atualizado '{variavel_original}' -> relevant: {relevant_final}")
         return novo_df
     
     except Exception as e:
@@ -811,10 +816,10 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey=aplicar_regex(survey) 
     #survey=adicionar_validacao_tempo_real(survey)
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
-    survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
     survey=adicionar_geolocalizacao_da_escola(survey)
     survey = add_groups(survey, groups_df)
     survey = adicionar_campos_exibicao_totais(survey)
+    survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
     
     
     # Adicionar linhas padrão
