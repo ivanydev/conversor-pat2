@@ -335,7 +335,7 @@ def adicionar_campos_exibicao_totais(df):
     linhas_para_inserir = []  # Lista para armazenar as novas linhas e seus índices de inserção
 
     for index, row in df.iterrows():
-        if row["type"] == "calculate" and ("_total" in row["name"] or "total_" in row["name"]):
+        if row["type"] == "calculate" and ("_total" in row["name"].str.lower() or "total_" in row["name"].str.lower()):
             campo_exibicao = {
                 "type": "note",
                 "name": f"exibir_{row['name']}",
