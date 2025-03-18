@@ -126,7 +126,7 @@ def atualizar_df_com_relevant(df, caminho_relevants):
                 
                 # Substituir o prefixo na variável relevante
                 prefixo = variavel_original.split('_')[0]
-                relevant_final = relevant_value.replace("(prefixo)", f"{prefixo}")
+                relevant_final = relevant_value.replace("(prefixo)", f"{prefixo.upper()}")
                 
                 # Atualizar o campo 'relevant'
                 novo_df.loc[mask, "relevant"] = relevant_final
