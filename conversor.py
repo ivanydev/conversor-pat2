@@ -248,7 +248,26 @@ def is_valid_variable_name(name):
 
 
 
-
+def adicionar_coluna_default(df):
+    """
+    Adiciona a coluna 'default' e define o valor padrão como 0 para todas as colunas do tipo 'integer' ou 'calculate'.
+    
+    Parâmetros:
+        df (pd.DataFrame): DataFrame com os dados do formulário
+     
+    Retorna:
+        pd.DataFrame: DataFrame com a coluna 'default' adicionada e preenchida conforme necessário
+    """
+    # Adiciona a coluna 'default' se ela não existir
+    if 'default' not in df.columns:
+        df['default'] = None
+    
+    # Percorre o DataFrame e define o valor padrão como 0 para colunas do tipo 'integer' ou 'calculate'
+    for index, row in df.iterrows():
+        if row['type'] in ['integer', 'calculate']:
+            df.at[index, 'default'] = 0
+    
+    return df
 
 
 def adicionar_geolocalizacao_da_escola(df):
@@ -812,6 +831,7 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     
     #survey=remover_grupos_vazios(survey)
     survey = adicionar_calculos_automaticos(survey, padroes_file)
+    survey=adicionar_coluna_default(survey)
     # Lista de variáveis para automação
     survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P2_inicio_ano_lectivo', 'DGE_SQE_B0_P3_fim_ano_lectivo'])
     survey=aplicar_regex(survey) 
