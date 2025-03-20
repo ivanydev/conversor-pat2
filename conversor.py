@@ -818,9 +818,8 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
     survey=adicionar_geolocalizacao_da_escola(survey)
     survey = add_groups(survey, groups_df)
-    survey = adicionar_campos_exibicao_totais(survey)
     survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
-    
+    #survey = adicionar_campos_exibicao_totais(survey)
     
     # Adicionar linhas padrão
     standard_rows = [
