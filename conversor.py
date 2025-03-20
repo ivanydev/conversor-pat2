@@ -284,7 +284,7 @@ def adicionar_geolocalizacao_da_escola(df):
             "label::Portugues (pt)": "Latitude",
             "required": "false",
             "relevant": "${capturar_localizacao} = 'sim'",
-            "calculation": "pulldata('geolocalizacao_escola', 'latitude')"
+            "calculation": "selected-at(${geolocalizacao_escola}, 0)"
         },
         {
             "type": "calculate",
@@ -292,7 +292,7 @@ def adicionar_geolocalizacao_da_escola(df):
             "label::Portugues (pt)": "Longitude",
             "required": "false",
             "relevant": "${capturar_localizacao} = 'sim'",
-            "calculation": "pulldata('geolocalizacao_escola', 'longitude')"
+            "calculation": "selected-at(${geolocalizacao_escola}, 1)"
         },
         {
             "type": "calculate",
@@ -300,7 +300,7 @@ def adicionar_geolocalizacao_da_escola(df):
             "label::Portugues (pt)": "Altitude",
             "required": "false",
             "relevant": "${capturar_localizacao} = 'sim'",
-            "calculation": "pulldata('geolocalizacao_escola', 'altitude')"
+            "calculation": "selected-at(${geolocalizacao_escola}, 2)"
         },
         {
             "type": "calculate",
@@ -308,10 +308,11 @@ def adicionar_geolocalizacao_da_escola(df):
             "label::Portugues (pt)": "Precisão",
             "required": "false",
             "relevant": "${capturar_localizacao} = 'sim'",
-            "calculation": "pulldata('geolocalizacao_escola', 'accuracy')"
+            "calculation": "selected-at(${geolocalizacao_escola}, 3)"
         }
     ]
 
+ 
     # Criar DataFrames para os novos campos
     selecao_df = pd.DataFrame(campos_selecao)
     geolocalizacao_df = pd.DataFrame(campos_geolocalizacao)
@@ -814,12 +815,11 @@ def convert_to_xlsform(data_file, groups_file, padroes_file):
     # Lista de variáveis para automação
     survey = gerar_campos_automaticos(survey, ['DGE_SQE_B0_P0_id_questionario', 'DGE_SQE_B0_P1_codigo_escola','DGE_SQE_B0_P2_inicio_ano_lectivo', 'DGE_SQE_B0_P3_fim_ano_lectivo'])
     survey=aplicar_regex(survey) 
-    #survey=adicionar_validacao_tempo_real(survey)
     survey=atualizar_df_com_selects(survey, "selects.xlsx")
     survey=adicionar_geolocalizacao_da_escola(survey)
     survey = add_groups(survey, groups_df)
-    #survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
-    #survey = adicionar_campos_exibicao_totais(survey)
+    survey=atualizar_df_com_relevant(survey, "relevante.xlsx")
+    survey = adicionar_campos_exibicao_totais(survey)
     
     # Adicionar linhas padrão
     standard_rows = [
