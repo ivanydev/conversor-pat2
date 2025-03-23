@@ -262,13 +262,14 @@ def adicionar_coluna_default_e_decimal(df):
                       e o tipo das variáveis específicas alterado para 'decimal'.
     """
     # Adiciona a coluna 'default' se ela não existir
-    if 'default' not in df.columns:
+    if(1==2) and 'default' not in df.columns:
         df['default'] = None
     
     # Percorre o DataFrame e define o valor padrão como 0 para colunas do tipo 'integer' ou 'calculate'
-    for index, row in df.iterrows():
-        if row['type'] in ['integer', 'calculate']:
-            df.at[index, 'default'] = 0
+    if(1==2):
+        for index, row in df.iterrows():
+            if row['type'] in ['integer', 'calculate']:
+                df.at[index, 'default'] = 0
     
     # Altera o tipo para 'decimal' nas variáveis específicas
     variaveis_para_decimal = [
@@ -372,7 +373,7 @@ def adicionar_campos_exibicao_totais(df):
             campo_exibicao = {
                 "type": "note",
                 "name": f"exibir_{row['name']}",
-                "label::Portugues (pt)": f"Total de {row['name'].replace('_', ' ').title()}: ${{{row['name']}}}"
+                "label::Portugues (pt)": f"{row['label::Portugues (pt)']}: ${{{row['name']}}}"
             }
             # Adicionar a nova linha e o índice onde ela deve ser inserida
             linhas_para_inserir.append((index + 1, campo_exibicao))
@@ -803,7 +804,7 @@ def adicionar_calculos_automaticos(df, excel_path):
             continue
 
         # Atualizar o cálculo na variável alvo
-        df.loc[df['name'] == target_var, 'calculation'] = new_calculation
+        df.loc[df['name'] == target_var, 'calculation'] = new_calculation if new_calculation else '0'
         df.loc[df['name'] == target_var, 'type'] = 'calculate'
     st.write("Cálculos automáticos adicionados com sucesso.")
     st.write("==CONCLUÍDO==")
