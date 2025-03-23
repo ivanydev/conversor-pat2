@@ -775,14 +775,14 @@ def adicionar_calculos_automaticos(df, excel_path):
             #print(f"⚠️ Nenhuma variável encontrada para {target_var} com padrões: {', '.join(padroes)} (exceto: {', '.join(excepto)})")
             continue
 
-        new_calculation = '+'.join([f'${{{var}}}' for var in vars_somar])
+        new_calculation = '+'.join([f'coalesce(${{{var}}},0)' for var in vars_somar])
 
         if has_cycle(target_var, set()):
             print(f"❌ Cálculo ignorado para {target_var} para evitar ciclo.")
             continue
 
         # Atualizar o cálculo na variável alvo
-        df.loc[df['name'] == target_var, 'calculation'] = new_calculation if new_calculation else '0'
+        df.loc[df['name'] == target_var, 'calculation'] = new_calculation
         df.loc[df['name'] == target_var, 'type'] = 'calculate'
     st.write("Cálculos automáticos adicionados com sucesso.")
     st.write("==CONCLUÍDO==")
