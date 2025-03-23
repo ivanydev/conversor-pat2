@@ -776,7 +776,9 @@ def adicionar_calculos_automaticos(df, excel_path):
             continue
 
         new_calculation = '+'.join([f'coalesce(${{{var}}},0)' for var in vars_somar])
-
+        #new_calculation = ' + '.join([f"if(${{{var}}}='', 0, ${{{var}}})" for var in vars_somar])
+        
+        
         if has_cycle(target_var, set()):
             print(f"❌ Cálculo ignorado para {target_var} para evitar ciclo.")
             continue
