@@ -70,8 +70,15 @@ def aplicar_regex(df):
 
         # Aplicar a validação: se o padrão estiver na variável e excepto não estiver
         mask = df["name"].str.contains(padrao, case=False, na=False)
+        #if excepto:
+        #    mask &= ~df["name"].str.contains(excepto, case=False, na=False)
+        
         if excepto:
-            mask &= ~df["name"].str.contains(excepto, case=False, na=False)
+            # Separar os termos de 'excepto' por vírgula e remover espaços em excesso
+            exceptos = [e.strip() for e in excepto.split(",") if e.strip()]
+            
+            for ex in exceptos:
+                mask &= ~df["name"].str.contains(ex, case=False, na=False)
 
         # Aplicar as constraints às linhas que atendem ao critério
         df.loc[mask, "constraint"] = constraint
